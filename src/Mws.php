@@ -43,12 +43,15 @@ class Mws
     {
         $methodName = 'listOrders';
         $this->log->info('Start ' . $methodName);
-        $dateTime = Utils::formatDateForMWS(new \DateTime());
+        $d = new \DateTime('2019-03-01 00:00:00');
+        $dateTime = Utils::formatDateForMWS($d);
         $requestParams = [
             'requestDT' => $dateTime,
             'outputFormat' => 'XML',
             'shopId' => $this->shop_id,
-            'orderCreatedDatetimeLessOrEqual' => $dateTime
+//            'paid' => 'true',
+//            'orderCreatedDatetimeLessOrEqual' => Utils::formatDateForMWS( $d ),
+//            'orderCreatedDatetimeGreaterOrEqual' => Utils::formatDateForMWS( $d->sub(new \DateInterval('P10D')) ),
         ];
         $result = $this->sendUrlEncodedRequest($methodName, $requestParams);
         $this->log->info($result);
@@ -117,7 +120,7 @@ class Mws
         $this->log->info('Start ' . $methodName);
         $dateTime = Utils::formatDate(new \DateTime());
         $requestParams = [
-            'clientOrderId' => time(),
+            'clientOrderId' => $orderId,
             'requestDT' => $dateTime,
             'orderId' => $orderId,
             'amount' => $amount,
@@ -156,15 +159,19 @@ class Mws
      * @param  string $amount amount to make the payment
      * @return string                response from Yandex.Money in XML format
      */
-    public function repeatCardPayment($invoiceId, $amount)
+    public function repeatCardPayment($orderId, $invoiceId, $amount, $reciept = null)
     {
         $methodName = 'repeatCardPayment';
         $this->log->info('Start ' . $methodName);
         $requestParams = [
-            'clientOrderId' => time(),
+            'clientOrderId' => $orderId,
+            'orderNumber' => $orderId,
             'invoiceId' => $invoiceId,
             'amount' => $amount
         ];
+        if (!empty($reciept)) {
+            $requestParams['ym_merchant_receipt'] = $reciept;
+        }
         $result = $this->sendUrlEncodedRequest($methodName, $requestParams);
         $this->log->info($result);
         return $result;
